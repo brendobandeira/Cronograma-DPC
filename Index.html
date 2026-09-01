@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronograma - 120 Dias</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(180deg,#eef2f3,#e7edf0);color:#2c3e50;line-height:1.4;padding:10px;font-size:13px}
+.container{max-width:1100px;margin:0 auto}
+header{text-align:center;padding:18px 15px;background:linear-gradient(135deg,#1f2d3a,#34495e 60%,#2c3e50);color:#fff;border-radius:12px;margin-bottom:14px;box-shadow:0 4px 14px rgba(44,62,80,.25)}
+header h1{font-size:1.55em;margin-bottom:4px;letter-spacing:.3px}
+header p{opacity:.85;font-size:.9em}
+.progress-container{background:#fff;padding:16px;border-radius:12px;margin-bottom:14px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px}
+.progress-title{font-weight:700;font-size:1em;color:#2c3e50}
+.progress-stats{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+.progress-count{font-size:.9em;color:#7f8c8d;font-weight:600}
+.progress-percent{font-size:1.2em;font-weight:800;color:#27ae60}
+.progress-bar{width:100%;height:24px;background:#eef1f2;border-radius:15px;overflow:hidden;position:relative;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)}
+.progress-fill{height:100%;background:linear-gradient(90deg,#27ae60,#2ecc71);border-radius:15px;transition:width .4s ease;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8em;min-width:0}
+.progress-buttons{display:flex;gap:8px;margin-top:10px;justify-content:center;flex-wrap:wrap}
+.progress-btn{padding:7px 14px;background:#ecf0f1;color:#2c3e50;border:none;border-radius:8px;font-weight:600;font-size:.75em;cursor:pointer;transition:all .2s}
+.progress-btn:hover{background:#34495e;color:#fff;transform:translateY(-1px)}
+.progress-btn.reset{background:#e74c3c;color:#fff}
+.progress-btn.reset:hover{background:#c0392b}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.stat-card{background:#fff;padding:11px 8px;border-radius:10px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.06);transition:transform .15s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-num{font-size:1.4em;font-weight:800;color:#2c3e50}
+.stat-label{font-size:.7em;color:#7f8c8d;font-weight:600}
+.nav{background:#fff;padding:8px;border-radius:10px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:6px;z-index:20}
+.nav button{padding:7px 14px;background:#ecf0f1;color:#2c3e50;border:none;border-radius:15px;font-weight:600;font-size:.75em;cursor:pointer;transition:all .2s}
+.nav button:hover{background:#34495e;color:#fff}
+.nav button.active{background:#e74c3c;color:#fff;box-shadow:0 2px 6px rgba(231,76,60,.4)}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:14px;padding:9px;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:.7em;font-weight:600}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.meta-section{display:none;margin-bottom:15px;animation:fadeIn .25s ease}
+.meta-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.meta-header{background:linear-gradient(135deg,#34495e,#2c3e50);color:#fff;padding:13px 16px;border-radius:10px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.meta-header h2{font-size:1.2em}
+.meta-header .meta-info{font-size:.75em;opacity:.9}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-top:3px solid transparent;display:flex;flex-direction:column;position:relative;transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:0 6px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+.card.completed{background:#e3f7ec;border-top-color:#27ae60}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.day-badge{font-size:1em;font-weight:800}
+.task-badge{font-size:.6em;font-weight:700;padding:2px 8px;border-radius:12px;background:#ecf0f1;color:#7f8c8d;text-transform:uppercase}
+.complete-btn{position:absolute;top:8px;right:8px;padding:4px 10px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:.65em;font-weight:700;cursor:pointer;transition:all .2s;z-index:10}
+.complete-btn:hover{background:#229954;transform:scale(1.05)}
+.complete-btn.completed{background:#27ae60}
+.complete-btn.completed::before{content:"✓ "}
+.complete-btn:not(.completed)::before{content:"○ "}
+.subj{padding:6px 8px;border-radius:6px;margin-bottom:5px;border-left:3px solid;background:#f8f9fa}
+.subj:last-of-type{margin-bottom:0}
+.subj-name{font-weight:700;font-size:.75em;margin-bottom:2px}
+.subj-topic{font-size:.7em;color:#2c3e50;font-weight:600;margin-bottom:1px}
+.subj-pages{font-size:.7em;color:#7f8c8d}
+.subj-free{background:#e8f4f8;border:2px dashed #3498db;text-align:center;padding:10px;border-radius:6px;margin-bottom:5px}
+.subj-free-text{font-size:.75em;color:#3498db;font-weight:700}
+.questions{margin-top:6px;padding:5px;background:#fff3cd;border:1px dashed #ffeeba;border-radius:6px;font-size:.7em;font-weight:600;color:#856404;text-align:center}
+.pen{border-left-color:#e74c3c}.pen .subj-name{color:#e74c3c}
+.con{border-left-color:#2980b9}.con .subj-name{color:#2980b9}
+.adm{border-left-color:#27ae60}.adm .subj-name{color:#27ae60}
+.prc{border-left-color:#f39c12}.prc .subj-name{color:#f39c12}
+.leg{border-left-color:#8e44ad}.leg .subj-name{color:#8e44ad}
+.card.rest{border-top-color:#95a5a6;background:linear-gradient(135deg,#f8f9fa,#e9ecef)}
+.card.rest .day-badge{color:#95a5a6}
+.card.exam{border-top-color:#d35400;background:linear-gradient(135deg,#fff5f0,#ffe8dc)}
+.card.exam .day-badge{color:#d35400}
+.icon{font-size:1.5em;margin-bottom:4px}
+.special-content{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:10px 0}
+.dup-flag{margin-top:5px;padding:4px 6px;background:#fdecea;border:1px dashed #e74c3c;border-radius:6px;font-size:.65em;font-weight:700;color:#c0392b;text-align:center}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:22px;max-width:340px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.25);text-align:center}
+.modal-box p{font-size:.9em;color:#2c3e50;margin-bottom:16px;font-weight:600;line-height:1.5}
+.modal-buttons{display:flex;gap:10px;justify-content:center}
+.modal-buttons button{padding:8px 16px;border:none;border-radius:8px;font-weight:700;font-size:.8em;cursor:pointer;transition:all .2s}
+.modal-btn-confirm{background:#27ae60;color:#fff}
+.modal-btn-confirm:hover{background:#229954}
+.modal-btn-cancel{background:#ecf0f1;color:#2c3e50}
+.modal-btn-cancel:hover{background:#dcdfe0}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}header h1{font-size:1.2em}.nav{position:static}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+    <h1>🎯 Cronograma - 120 Dias</h1>
+    <p>120 dias | Matérias de maior recorrência</p>
+</header>
+
+<div class="progress-container">
+    <div class="progress-header">
+        <div class="progress-title">📊 Progresso Geral</div>
+        <div class="progress-stats">
+            <div class="progress-count"><span id="completedCount">0</span> / 120 dias</div>
+            <div class="progress-percent"><span id="progressPercent">0</span>%</div>
+        </div>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-buttons">
+        <button class="progress-btn" onclick="markAllComplete()">✓ Marcar Todos</button>
+        <button class="progress-btn reset" onclick="resetProgress()">🔄 Resetar</button>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-card"><div class="stat-num">120</div><div class="stat-label">Dias Totais</div></div>
+    <div class="stat-card"><div class="stat-num">100</div><div class="stat-label">Dias Estudo</div></div>
+    <div class="stat-card"><div class="stat-num">2000</div><div class="stat-label">Páginas</div></div>
+    <div class="stat-card"><div class="stat-num">1000</div><div class="stat-label">Questões</div></div>
+    <div class="stat-card"><div class="stat-num">10</div><div class="stat-label">Simulados</div></div>
+</div>
+
+<nav class="nav">
+    <button class="active" onclick="showMeta('m1',this)">Meta 1</button>
+    <button onclick="showMeta('m2',this)">Meta 2</button>
+    <button onclick="showMeta('m3',this)">Meta 3</button>
+    <button onclick="showMeta('m4',this)">Meta 4</button>
+    <button onclick="showMeta('m5',this)">Meta 5</button>
+    <button onclick="showMeta('m6',this)">Meta 6</button>
+    <button onclick="showMeta('m7',this)">Meta 7</button>
+    <button onclick="showMeta('m8',this)">Meta 8</button>
+    <button onclick="showMeta('m9',this)">Meta 9</button>
+    <button onclick="showMeta('m10',this)">Meta 10</button>
+</nav>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Penal</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2980b9"></div>Constitucional</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div>Administrativo</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div>Proc. Penal</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8e44ad"></div>Legs. Penal </div>
+</div>
+
+<!-- META 1 -->
+<section class="meta-section active" id="m1">
+<div class="meta-header"><h2>📚 Meta 1</h2><div class="meta-info">Dias 1-12 | Crimes Patrimônio, Direitos Individuais, Licitações, Inquérito, Org. Criminosa</div></div>
+<div class="grid">
+<div class="card" data-day="1"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra o patrimônio</div><div class="subj-pages">p. 83-92 (Cap. 7 - Furto)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 195-204 (Cap. 9)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="2"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos (Lei 14.133/21)</div><div class="subj-pages">p. 147-156 (Cap. 6)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Inquérito policial</div><div class="subj-pages">p. 77-86 (Cap. 5)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="3"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Organização Criminosa (Lei 12.850/13)</div><div class="subj-pages">p. 67-76 (Cap. 7)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra o patrimônio</div><div class="subj-pages">p. 93-102 (Cap. 8 - Roubo)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="4"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 205-214 (Cap. 9)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 157-166 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="5"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Inquérito policial</div><div class="subj-pages">p. 87-96 (Cap. 5)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Lei Maria da Penha (Lei 11.340/06)</div><div class="subj-pages">p. 92-101 (Cap. 9)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="6"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra o patrimônio</div><div class="subj-pages">p. 103-112 (Cap. 9-10)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 215-224 (Cap. 9)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="7"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 167-176 (Cap. 6)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Inquérito policial</div><div class="subj-pages">p. 97-106 (Cap. 5)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="8"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Lei de Drogas (Lei 11.343/06)</div><div class="subj-pages">p. 31-40 (Cap. 3)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra o patrimônio</div><div class="subj-pages">p. 113-122 (Cap. 11-12)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="9"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 225-234 (Cap. 9)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 177-186 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="10"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Inquérito policial</div><div class="subj-pages">p. 107-116 (Cap. 5)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Interceptação Telefônica + Hediondos</div><div class="subj-pages">p. 56-61 + p. 13-16 (Cap. 5 e 1)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="11"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="12"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 1</p></div></div>
+</div>
+</section>
+
+<!-- META 2 -->
+<section class="meta-section" id="m2">
+<div class="meta-header"><h2>📚 Meta 2</h2><div class="meta-info">Dias 13-24 | Crimes Adm. Pública, Controle Constitucionalidade, Provas, Drogas, Abuso Autoridade</div></div>
+<div class="grid">
+<div class="card" data-day="13"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra o patrimônio (fim)</div><div class="subj-pages">p. 123-132 (Cap. 13-14)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 235-244 (Cap. 9)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="14"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 187-196 (Cap. 6)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Inquérito policial (fim)</div><div class="subj-pages">p. 117-126 (Cap. 5)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="15"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Hediondos (fim) + Drogas</div><div class="subj-pages">p. 17-24 + p. 41-46 (Cap. 1 e 3)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra o patrimônio (fim)</div><div class="subj-pages">p. 133-142 (Cap. 15)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="16"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 245-254 (Cap. 9)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 197-206 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="17"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Inquérito (fim) + Provas (início)</div><div class="subj-pages">p. 127-128 + p. 292-299 (Cap. 5 e 14)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Drogas (fim) + Desarmamento</div><div class="subj-pages">p. 47-48 + p. 49-55 (Cap. 3 e 4)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="18"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Adm. Pública (início)</div><div class="subj-pages">p. 264-273 (Cap. 36-37)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos e garantias individuais</div><div class="subj-pages">p. 255-264 (Cap. 9)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="19"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 207-216 (Cap. 6)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Provas</div><div class="subj-pages">p. 300-309 (Cap. 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="20"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Abuso de Autoridade (Lei 13.869/19)</div><div class="subj-pages">p. 106-115 (Cap. 10)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Adm. Pública</div><div class="subj-pages">p. 274-283 (Cap. 37)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="21"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos (fim) + Controle (início)</div><div class="subj-pages">p. 265-268 + p. 553-558 (Cap. 9 e 20)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações e contratos</div><div class="subj-pages">p. 217-226 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="22"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Provas</div><div class="subj-pages">p. 310-319 (Cap. 14)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Abuso de Autoridade (fim) + Lavagem</div><div class="subj-pages">p. 116-120 + p. 121-124 (Cap. 10 e 11)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="23"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="24"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 2</p></div></div>
+</div>
+</section>
+
+<!-- META 3 -->
+<section class="meta-section" id="m3">
+<div class="meta-header"><h2>📚 Meta 3</h2><div class="meta-info">Dias 25-36 | Teoria do Crime, Contratos Adm., CTB, Tortura</div></div>
+<div class="grid">
+<div class="card" data-day="25"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Adm. Pública</div><div class="subj-pages">p. 284-293 (Cap. 38)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Controle de constitucionalidade</div><div class="subj-pages">p. 559-568 (Cap. 20)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="26"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Licitações (fim) + Contratos (início)</div><div class="subj-pages">p. 227-236 (Cap. 6-7)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Provas</div><div class="subj-pages">p. 320-329 (Cap. 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="27"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Lavagem (fim) + CTB</div><div class="subj-pages">p. 124 + p. 81-89 (Cap. 11 e 8)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Adm. Pública</div><div class="subj-pages">p. 294-303 (Cap. 38-39)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="28"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Controle de constitucionalidade</div><div class="subj-pages">p. 569-578 (Cap. 20)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Contratos Administrativos</div><div class="subj-pages">p. 237-246 (Cap. 7)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="29"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Provas</div><div class="subj-pages">p. 330-339 (Cap. 14)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">CTB (fim) + Tortura</div><div class="subj-pages">p. 90-91 + p. 62-66 (Cap. 8 e 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="30"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Adm. Pública (fim)</div><div class="subj-pages">p. 304-313 (Cap. 39-40)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Controle de constitucionalidade</div><div class="subj-pages">p. 579-588 (Cap. 20)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="31"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Contratos Administrativos</div><div class="subj-pages">p. 247-256 (Cap. 7)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Provas</div><div class="subj-pages">p. 340-349 (Cap. 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="32"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Tortura (fim) + ECA</div><div class="subj-pages">p. 66 + p. 125-133 (Cap. 6 e 12)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Adm. Pública (fim)</div><div class="subj-pages">p. 314-323 (Cap. 40-41)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="33"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Controle de constitucionalidade</div><div class="subj-pages">p. 589-598 (Cap. 20)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Contratos Administrativos</div><div class="subj-pages">p. 257-266 (Cap. 7)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="34"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Provas (fim) + Prisão (início)</div><div class="subj-pages">p. 350-354 + p. 375-379 (Cap. 14 e 16)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Tipicidade (início)</div><div class="subj-pages">p. 87-96 (Cap. 11)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="35"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="36"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 3</p></div></div>
+</div>
+</section>
+
+<!-- META 4 -->
+<section class="meta-section" id="m4">
+<div class="meta-header"><h2>📚 Meta 4</h2><div class="meta-info">Dias 37-48 | Ilicitude, Culpabilidade, Crimes Vida, Atos Adm., Organização Estado</div></div>
+<div class="grid">
+<div class="card" data-day="37"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Tipicidade</div><div class="subj-pages">p. 97-106 (Cap. 11)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Controle de constitucionalidade</div><div class="subj-pages">p. 599-608 (Cap. 20)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="38"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Contratos (fim) + Atos (início)</div><div class="subj-pages">p. 267-276 (Cap. 7-4)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão e liberdade</div><div class="subj-pages">p. 380-389 (Cap. 16)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="39"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">ECA (fim) + Terrorismo</div><div class="subj-pages">p. 134-137 + p. 138-141 (Cap. 12 e 13)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Tipicidade</div><div class="subj-pages">p. 107-116 (Cap. 11)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="40"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Controle (fim) + Org. Estado (início)</div><div class="subj-pages">p. 609-618 + p. 351-354 (Cap. 20 e 14)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Atos administrativos</div><div class="subj-pages">p. 101-110 (Cap. 4)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="41"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão e liberdade</div><div class="subj-pages">p. 390-399 (Cap. 16)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Terrorismo (fim) + Consumidor</div><div class="subj-pages">p. 142 + p. 143-150 (Cap. 13 e 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="42"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Tipicidade (fim)</div><div class="subj-pages">p. 117-126 (Cap. 11-12)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Organização do Estado</div><div class="subj-pages">p. 355-364 (Cap. 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="43"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Atos administrativos</div><div class="subj-pages">p. 111-120 (Cap. 4)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão e liberdade</div><div class="subj-pages">p. 400-409 (Cap. 16)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="44"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Consumidor (fim) + Trib/Econ</div><div class="subj-pages">p. 150 + p. 155-162 (Cap. 14 e 16)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Ilicitude</div><div class="subj-pages">p. 127-136 (Cap. 12-13)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="45"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Organização do Estado</div><div class="subj-pages">p. 365-374 (Cap. 14)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Atos administrativos</div><div class="subj-pages">p. 121-130 (Cap. 4)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="46"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão e liberdade</div><div class="subj-pages">p. 410-419 (Cap. 16)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Culpabilidade</div><div class="subj-pages">p. 137-146 (Cap. 13-14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="47"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="48"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 4</p></div></div>
+</div>
+</section>
+
+<!-- META 5 -->
+<section class="meta-section" id="m5">
+<div class="meta-header"><h2>📚 Meta 5</h2><div class="meta-info">Dias 49-60 | Aplicação Pena, Concurso, Improbidade, Ação Penal</div></div>
+<div class="grid">
+<div class="card" data-day="49"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria do Crime - Culpabilidade (fim)</div><div class="subj-pages">p. 147-156 (Cap. 14-15)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Organização do Estado</div><div class="subj-pages">p. 375-384 (Cap. 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="50"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Atos (fim) + Org. Adm. (início)</div><div class="subj-pages">p. 131-140 (Cap. 4-2)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão e liberdade</div><div class="subj-pages">p. 420-429 (Cap. 16)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="51"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Trib/Econ (fim) + Ambientais</div><div class="subj-pages">p. 163-167 + p. 168-172 (Cap. 16 e 17)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Iter Criminis + Concurso Pessoas</div><div class="subj-pages">p. 157-166 (Cap. 15-16)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="52"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Organização do Estado</div><div class="subj-pages">p. 385-394 (Cap. 14)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Organização administrativa</div><div class="subj-pages">p. 36-45 (Cap. 2)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="53"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão e liberdade</div><div class="subj-pages">p. 430-439 (Cap. 16)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Ambientais (continuação)</div><div class="subj-pages">p. 173-182 (Cap. 17)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="54"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Concurso de Pessoas (fim) + Crimes</div><div class="subj-pages">p. 167-176 (Cap. 16-17)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Organização do Estado</div><div class="subj-pages">p. 395-404 (Cap. 14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="55"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Organização administrativa</div><div class="subj-pages">p. 46-55 (Cap. 2)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Prisão (fim) + Ação Penal (início)</div><div class="subj-pages">p. 440-445 + p. 129-133 (Cap. 16 e 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="56"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Ambientais (fim) + Sist. Financeiro</div><div class="subj-pages">p. 183-190 + p. 191-194 (Cap. 17 e 18)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Teoria Geral da Pena + Aplicação</div><div class="subj-pages">p. 177-186 (Cap. 17-18)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="57"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Org. Estado (fim) + Adm. Pública</div><div class="subj-pages">p. 405-406 + p. 407-414 (Cap. 14-15)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Organização administrativa</div><div class="subj-pages">p. 56-65 (Cap. 2)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="58"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Ação penal</div><div class="subj-pages">p. 134-143 (Cap. 6)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Aplicação da pena</div><div class="subj-pages">p. 187-196 (Cap. 18)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="59"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="60"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 5</p></div></div>
+</div>
+</section>
+
+<!-- META 6 -->
+<section class="meta-section" id="m6">
+<div class="meta-header"><h2>📚 Meta 6</h2><div class="meta-info">Dias 61-72 | Concurso Crimes, Extinção Punibilidade, Remédios, Competência, Poderes Adm.</div></div>
+<div class="grid">
+<div class="card" data-day="61"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Aplicação da pena</div><div class="subj-pages">p. 197-206 (Cap. 18)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Administração Pública</div><div class="subj-pages">p. 415-424 (Cap. 15)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="62"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Organização administrativa</div><div class="subj-pages">p. 66-75 (Cap. 2)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Ação penal</div><div class="subj-pages">p. 144-153 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="63"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Sist. Financeiro (fim) + Genocídio</div><div class="subj-pages">p. 195-204 + p. 151-154 (Cap. 18 e 15)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Aplicação da pena</div><div class="subj-pages">p. 207-216 (Cap. 18)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="64"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Adm. Pública (fim) + Teoria Const.</div><div class="subj-pages">p. 425-426 + p. 67-74 (Cap. 15-3)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Organização administrativa</div><div class="subj-pages">p. 76-85 (Cap. 2)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="65"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Ação penal</div><div class="subj-pages">p. 154-163 (Cap. 6)</div></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Genocídio (fim) + Preconceito Raça</div><div class="subj-pages">p. 154 + p. 205-211 (Cap. 15 e 19)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="66"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Aplicação da pena (fim) + Concurso</div><div class="subj-pages">p. 217-226 (Cap. 18-19)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Teoria da Constituição</div><div class="subj-pages">p. 75-84 (Cap. 3)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="67"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Org. Adm. (fim) + Improbidade (início)</div><div class="subj-pages">p. 86-95 (Cap. 2-17)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Ação Penal (fim) + Competência</div><div class="subj-pages">p. 164 + p. 174-182 (Cap. 6-8)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="68"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Preconceito Raça (continuação)</div><div class="subj-pages">p. 212-221 (Cap. 19)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Concurso de Crimes</div><div class="subj-pages">p. 227-236 (Cap. 19-20)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="69"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Teoria da Constituição</div><div class="subj-pages">p. 85-94 (Cap. 3)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Improbidade administrativa</div><div class="subj-pages">p. 96-105 (Cap. 17-3)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="70"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Competência e jurisdição</div><div class="subj-pages">p. 183-192 (Cap. 8)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Medidas de Segurança + Efeitos</div><div class="subj-pages">p. 237-246 (Cap. 20-21)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="71"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="72"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 6</p></div></div>
+</div>
+</section>
+
+<!-- META 7 -->
+<section class="meta-section" id="m7">
+<div class="meta-header"><h2>📚 Meta 7</h2><div class="meta-info">Dias 73-84 | Dignidade Sexual, Fé Pública, Defesa Estado, Poder Legislativo, Agentes Públicos</div></div>
+<div class="grid">
+<div class="card" data-day="73"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Efeitos da Condenação + Reabilitação</div><div class="subj-pages">p. 247-256 (Cap. 21-22)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Teoria da Constituição</div><div class="subj-pages">p. 95-104 (Cap. 3)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="74"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Improbidade administrativa</div><div class="subj-pages">p. 106-115 (Cap. 3-17)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Competência e jurisdição</div><div class="subj-pages">p. 193-202 (Cap. 8)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="75"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj leg"><div class="subj-name">Legislação Penal Esp.</div><div class="subj-topic">Preconceito Raça (fim) + Contravenções</div><div class="subj-pages">p. 222-230 + p. 25-30 (Cap. 19 e 2)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Reabilitação (fim) + Ação Penal</div><div class="subj-pages">p. 257-266 (Cap. 22-23)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="76"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Teoria da Constituição (fim) + Poderes</div><div class="subj-pages">p. 105-114 (Cap. 3-4)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Improbidade administrativa</div><div class="subj-pages">p. 116-125 (Cap. 17)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="77"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Competência e jurisdição</div><div class="subj-pages">p. 203-212 (Cap. 8)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="78"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Vida (início)</div><div class="subj-pages">p. 15-24 (Cap. 1)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Poder Constituinte</div><div class="subj-pages">p. 115-124 (Cap. 4)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="79"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Improbidade (fim) + Poderes</div><div class="subj-pages">p. 126-135 (Cap. 17-3)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Competência e jurisdição</div><div class="subj-pages">p. 213-222 (Cap. 8)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="80"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Vida</div><div class="subj-pages">p. 25-34 (Cap. 1-2)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="81"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Poder Constituinte</div><div class="subj-pages">p. 125-134 (Cap. 4)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Poderes administrativos</div><div class="subj-pages">p. 84-93 (Cap. 3)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="82"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Competência e jurisdição</div><div class="subj-pages">p. 223-232 (Cap. 8)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes contra a Vida (fim)</div><div class="subj-pages">p. 35-44 (Cap. 2-3)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="83"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="84"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 7</p></div></div>
+</div>
+</section>
+
+<!-- META 8 -->
+<section class="meta-section" id="m8">
+<div class="meta-header"><h2>📚 Meta 8</h2><div class="meta-info">Dias 85-96 | Processo Legislativo, Responsabilidade Civil, Intervenção Propriedade, Procedimentos</div></div>
+<div class="grid">
+<div class="card" data-day="85"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Lesões Corporais + Periclitação</div><div class="subj-pages">p. 45-54 (Cap. 3-4)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Poder Constituinte</div><div class="subj-pages">p. 135-144 (Cap. 4)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="86"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Poderes administrativos</div><div class="subj-pages">p. 94-103 (Cap. 3)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Competência (fim) + Procedimentos</div><div class="subj-pages">p. 233-237 + p. 481-485 (Cap. 8-19)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="87"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Rixa + Crimes Contra Honra</div><div class="subj-pages">p. 55-64 (Cap. 4-5)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="88"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Poder Constituinte (fim) + Norma</div><div class="subj-pages">p. 145-154 (Cap. 4-5)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Poderes (fim) + Regime Jurídico</div><div class="subj-pages">p. 104-113 (Cap. 3-1)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="89"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Procedimentos penais</div><div class="subj-pages">p. 486-495 (Cap. 19)</div></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="90"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes Contra Honra (fim) + Liberdade</div><div class="subj-pages">p. 65-74 (Cap. 5-6)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Teoria da Norma Constitucional</div><div class="subj-pages">p. 155-164 (Cap. 5)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="91"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Regime jurídico e princípios</div><div class="subj-pages">p. 114-123 (Cap. 1)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Procedimentos penais</div><div class="subj-pages">p. 496-505 (Cap. 19)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="92"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes Contra Liberdade Individual</div><div class="subj-pages">p. 75-84 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="93"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Teoria da Norma Constitucional</div><div class="subj-pages">p. 165-174 (Cap. 5-6)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Regime jurídico e princípios</div><div class="subj-pages">p. 124-133 (Cap. 1)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="94"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Procedimentos penais</div><div class="subj-pages">p. 506-515 (Cap. 19)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Crimes Contra Liberdade (fim)</div><div class="subj-pages">p. 85-94 (Cap. 6-7)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="95"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="96"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 8</p></div></div>
+</div>
+</section>
+
+<!-- META 9 -->
+<section class="meta-section" id="m9">
+<div class="meta-header"><h2>📚 Meta 9</h2><div class="meta-info">Dias 97-108 | Poder Judiciário, Serviços Públicos, Recursos, Princípios Fundamentais, Direitos Políticos</div></div>
+<div class="grid">
+<div class="card" data-day="97"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Furto (início)</div><div class="subj-pages">p. 95-104 (Cap. 7)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Hermenêutica Constitucional</div><div class="subj-pages">p. 175-184 (Cap. 6)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="98"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Regime jurídico (fim) + Agentes</div><div class="subj-pages">p. 134-143 (Cap. 1-11)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Procedimentos penais</div><div class="subj-pages">p. 516-525 (Cap. 19)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="99"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Furto (continuação)</div><div class="subj-pages">p. 105-114 (Cap. 7-8)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="100"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Princípios Fundamentais</div><div class="subj-pages">p. 185-194 (Cap. 6-7)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Agentes públicos</div><div class="subj-pages">p. 298-307 (Cap. 11)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="101"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Procedimentos (fim) + Nulidades</div><div class="subj-pages">p. 526-535 (Cap. 19-20)</div></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="102"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Roubo e Extorsão</div><div class="subj-pages">p. 115-124 (Cap. 8)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Princípios Fundamentais</div><div class="subj-pages">p. 195-204 (Cap. 7)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="103"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Agentes públicos</div><div class="subj-pages">p. 308-317 (Cap. 11)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Nulidades</div><div class="subj-pages">p. 536-545 (Cap. 20)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="104"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Roubo e Extorsão (fim)</div><div class="subj-pages">p. 125-134 (Cap. 8-9)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="105"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Princípios Fundamentais (fim)</div><div class="subj-pages">p. 205-214 (Cap. 7-8)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Agentes públicos</div><div class="subj-pages">p. 318-327 (Cap. 11)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="106"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Nulidades (fim) + Recursos</div><div class="subj-pages">p. 546-555 (Cap. 20-21)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Usurpação + Dano</div><div class="subj-pages">p. 135-144 (Cap. 9-10)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="107"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="108"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Simulado - Revisão Meta 9</p></div></div>
+</div>
+</section>
+
+<!-- META 10 -->
+<section class="meta-section" id="m10">
+<div class="meta-header"><h2>📚 Meta 10</h2><div class="meta-info">Dias 109-120 | Nulidades, Sujeitos Processuais, Funções Essenciais Justiça, Tributação, Ordem Social, Legislação Complementar</div></div>
+<div class="grid">
+<div class="card" data-day="109"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 1</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Apropriação Indébita + Estelionato</div><div class="subj-pages">p. 145-154 (Cap. 11-12)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos Fundamentais</div><div class="subj-pages">p. 215-224 (Cap. 8)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="110"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 2</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Agentes públicos</div><div class="subj-pages">p. 328-337 (Cap. 11)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Recursos criminais</div><div class="subj-pages">p. 556-565 (Cap. 21)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="111"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 3</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Estelionato (continuação)</div><div class="subj-pages">p. 155-164 (Cap. 12)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="112"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 4</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos Fundamentais</div><div class="subj-pages">p. 225-234 (Cap. 8-9)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Agentes públicos</div><div class="subj-pages">p. 338-347 (Cap. 11)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="113"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 5</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Recursos criminais</div><div class="subj-pages">p. 566-575 (Cap. 21)</div></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="114"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 6</span><span class="task-badge">Estudo</span></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Estelionato (fim) + Receptação</div><div class="subj-pages">p. 165-174 (Cap. 12-13)</div></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos Individuais</div><div class="subj-pages">p. 235-244 (Cap. 9)</div></div><div class="dup-flag">⚠️ Mesma página do Dia 13 - revise esta matéria</div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="115"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 7</span><span class="task-badge">Estudo</span></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Agentes públicos (fim)</div><div class="subj-pages">p. 348-357 (Cap. 11-12)</div></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Recursos criminais</div><div class="subj-pages">p. 576-585 (Cap. 21)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="116"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 8</span><span class="task-badge">Estudo</span></div><div class="subj-free"><div class="subj-free-text">📝 ESPAÇO LIVRE - Defina a disciplina e matéria</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Receptação (fim) + Disposições</div><div class="subj-pages">p. 175-184 (Cap. 13-14)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="117"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 9</span><span class="task-badge">Estudo</span></div><div class="subj con"><div class="subj-name">Dir. Constitucional</div><div class="subj-topic">Direitos Individuais</div><div class="subj-pages">p. 245-254 (Cap. 9)</div></div><div class="subj adm"><div class="subj-name">Dir. Administrativo</div><div class="subj-topic">Intervenção na Propriedade</div><div class="subj-pages">p. 358-367 (Cap. 12-13)</div></div><div class="dup-flag">⚠️ Mesma página do Dia 16 - revise esta matéria</div><div class="questions">📝 10 questões</div></div>
+<div class="card" data-day="118"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 10</span><span class="task-badge">Estudo</span></div><div class="subj prc"><div class="subj-name">Dir. Processual Penal</div><div class="subj-topic">Recursos (fim) + HC</div><div class="subj-pages">p. 586-595 (Cap. 21-22)</div></div><div class="subj pen"><div class="subj-name">Direito Penal</div><div class="subj-topic">Propriedade Imaterial + Trabalho</div><div class="subj-pages">p. 185-194 (Cap. 15-16)</div></div><div class="questions">📝 10 questões</div></div>
+<div class="card rest" data-day="119"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 11</span><span class="task-badge">Descanso</span></div><div class="special-content"><div class="icon">🔋</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">Descanso e Recuperação</p></div></div>
+<div class="card exam" data-day="120"><button class="complete-btn" onclick="toggleComplete(this)">Concluído</button><div class="card-head"><span class="day-badge">Dia 12</span><span class="task-badge">Simulado</span></div><div class="special-content"><div class="icon">📝</div><p style="color:#7f8c8d;font-weight:500;font-size:.85em">SIMULADO FINAL - Revisão Geral</p></div></div>
+</div>
+</section>
+
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+        <p id="confirmModalText"></p>
+        <div class="modal-buttons">
+            <button class="modal-btn-cancel" onclick="closeConfirmModal()">Cancelar</button>
+            <button class="modal-btn-confirm" id="confirmModalOkBtn">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function showMeta(id,btn){
+    document.querySelectorAll('.meta-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleComplete(btn){
+    const card = btn.closest('.card');
+    const day = card.getAttribute('data-day');
+    const isCompleted = btn.classList.contains('completed');
+    
+    if(isCompleted){
+        btn.classList.remove('completed');
+        card.classList.remove('completed');
+        localStorage.removeItem('day_' + day);
+    } else {
+        btn.classList.add('completed');
+        card.classList.add('completed');
+        localStorage.setItem('day_' + day, 'true');
+    }
+    
+    updateProgress();
+}
+
+function updateProgress(){
+    const completed = document.querySelectorAll('.card.completed').length;
+    const total = 120;
+    const percent = Math.round((completed / total) * 100);
+    
+    document.getElementById('completedCount').textContent = completed;
+    document.getElementById('progressPercent').textContent = percent;
+    document.getElementById('progressFill').style.width = percent + '%';
+    
+    if(percent > 0){
+        document.getElementById('progressFill').textContent = percent + '%';
+    } else {
+        document.getElementById('progressFill').textContent = '';
+    }
+}
+
+function showConfirmModal(message, onConfirm){
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmModalText').textContent = message;
+    const okBtn = document.getElementById('confirmModalOkBtn');
+    const newOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    newOkBtn.addEventListener('click', function(){
+        closeConfirmModal();
+        onConfirm();
+    });
+    modal.classList.add('active');
+}
+
+function closeConfirmModal(){
+    document.getElementById('confirmModal').classList.remove('active');
+}
+
+document.getElementById('confirmModal').addEventListener('click', function(e){
+    if(e.target === this) closeConfirmModal();
+});
+
+function markAllComplete(){
+    showConfirmModal('Marcar todos os 120 dias como concluídos?', function(){
+        document.querySelectorAll('.card').forEach(card => {
+            const day = card.getAttribute('data-day');
+            const btn = card.querySelector('.complete-btn');
+            btn.classList.add('completed');
+            card.classList.add('completed');
+            localStorage.setItem('day_' + day, 'true');
+        });
+        updateProgress();
+    });
+}
+
+function resetProgress(){
+    showConfirmModal('Resetar todo o progresso? Isso apagará todos os dias concluídos.', function(){
+        document.querySelectorAll('.card').forEach(card => {
+            const day = card.getAttribute('data-day');
+            const btn = card.querySelector('.complete-btn');
+            btn.classList.remove('completed');
+            card.classList.remove('completed');
+            localStorage.removeItem('day_' + day);
+        });
+        updateProgress();
+    });
+}
+
+window.addEventListener('load', function(){
+    for(let i = 1; i <= 120; i++){
+        if(localStorage.getItem('day_' + i) === 'true'){
+            const card = document.querySelector('[data-day="' + i + '"]');
+            if(card){
+                const btn = card.querySelector('.complete-btn');
+                btn.classList.add('completed');
+                card.classList.add('completed');
+            }
+        }
+    }
+    updateProgress();
+});
+</script>
+</body>
+</html>
